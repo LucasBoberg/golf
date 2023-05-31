@@ -14,12 +14,18 @@ pub struct TokenClaims {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub token: String,
+    pub refresh_token: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignInDTO {
     pub email: String,
     pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RefreshDTO {
+    pub refresh_token: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Insertable, AsChangeset)]

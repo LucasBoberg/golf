@@ -1,16 +1,15 @@
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
-use chrono::{Duration, Utc};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
-use jsonwebtoken::{encode, EncodingKey, Header};
 
+use crate::middlewares::auth::generate_token;
 use crate::models::course::{Course, CourseDTO};
 use crate::models::hole::{Hole, HoleDTO};
 use crate::models::round::{Round, RoundDTO};
-use crate::models::user::{AuthResponse, SignInDTO, TokenClaims, User, UserDTO};
+use crate::models::user::{AuthResponse, SignInDTO, User, UserDTO};
 use crate::repository::schema::courses::dsl::*;
 use crate::repository::schema::holes::dsl as holes_dsl;
 use crate::repository::schema::rounds::dsl::*;
@@ -56,7 +55,14 @@ impl Database {
         Ok(user)
     }
 
-    pub fn sign_in(&self, secret: String, sign_in_dto: SignInDTO) -> Result<AuthResponse, Error> {
+    pub fn sign_in(
+        &self,
+        secret: String,
+        expires_in: i64,
+        refresh_secret: String,
+        expires_in_refresh: i64,
+        sign_in_dto: SignInDTO,
+    ) -> Result<AuthResponse, Error> {
         let user = users
             .filter(email.eq(&sign_in_dto.email))
             .get_result::<User>(&mut self.pool.get().unwrap())
@@ -66,25 +72,15 @@ impl Database {
 
         Argon2::default()
             .verify_password(sign_in_dto.password.as_bytes(), &parsed_hash)
-            .expect("Error while verifying password");
+            .expect("Wrong password or email");
 
-        let now = Utc::now();
-        let iat = now.timestamp() as usize;
-        let exp = (now + Duration::minutes(60)).timestamp() as usize;
-        let claims: TokenClaims = TokenClaims {
-            sub: user.id.to_string(),
-            exp,
-            iat,
-        };
+        let token = generate_token(user.id, secret, expires_in);
+        let refresh_token = generate_token(user.id, refresh_secret, expires_in_refresh);
 
-        let token = encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(secret.as_ref()),
-        )
-        .unwrap();
-
-        Ok(AuthResponse { token })
+        Ok(AuthResponse {
+            token,
+            refresh_token,
+        })
     }
 
     pub fn get_user(&self, user_id: &Uuid) -> Result<User, Error> {

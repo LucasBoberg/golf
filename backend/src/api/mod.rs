@@ -1,4 +1,5 @@
 use actix_web::web;
+use serde::{Deserialize, Serialize};
 
 use self::{
     course::{
@@ -6,8 +7,14 @@ use self::{
     },
     hole::{create_hole, delete_hole, get_hole, update_hole},
     round::{create_round, delete_round, get_round, get_rounds},
-    user::{get_me, sign_in, sign_up},
+    user::{get_me, refresh, sign_in, sign_up},
 };
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrorResponse {
+    status: String,
+    message: String,
+}
 
 pub mod course;
 pub mod hole;
@@ -19,6 +26,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         web::scope("/api")
             .service(sign_in)
             .service(sign_up)
+            .service(refresh)
             .service(get_me)
             .service(get_rounds)
             .service(get_round)

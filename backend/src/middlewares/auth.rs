@@ -6,13 +6,13 @@ use actix_web::{
     HttpRequest,
 };
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{models::user::TokenClaims, AppState};
 
-#[derive(Debug, Serialize)]
-struct ErrorResponse {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrorResponse {
     status: String,
     message: String,
 }
@@ -57,4 +57,22 @@ impl FromRequest for JwtMiddleware {
 
         ready(Ok(JwtMiddleware { user_id }))
     }
+}
+
+pub fn generate_token(user_id: Uuid, secret: String, expires_in: i64) -> String {
+    let now = chrono::Utc::now();
+    let iat = now.timestamp() as usize;
+    let exp = (now + chrono::Duration::minutes(expires_in)).timestamp() as usize;
+    let claims: TokenClaims = TokenClaims {
+        sub: user_id.to_string(),
+        exp,
+        iat,
+    };
+
+    jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &claims,
+        &jsonwebtoken::EncodingKey::from_secret(secret.as_ref()),
+    )
+    .unwrap()
 }
