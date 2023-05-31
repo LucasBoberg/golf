@@ -1,9 +1,17 @@
 use actix_web::{get, middleware, web, App, HttpResponse, HttpServer, Responder, Result};
+use models::config::Config;
+use repository::database::Database;
 use serde::Serialize;
 
 mod api;
+mod middlewares;
 mod models;
 mod repository;
+
+pub struct AppState {
+    db: Database,
+    env: Config,
+}
 
 #[derive(Serialize)]
 pub struct Response {
@@ -30,7 +38,8 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     let db = repository::database::Database::new();
-    let app_data = web::Data::new(db);
+    let config = Config::init();
+    let app_data = web::Data::new(AppState { db, env: config });
 
     log::info!("starting HTTP server at http://127.0.0.1:8080");
 

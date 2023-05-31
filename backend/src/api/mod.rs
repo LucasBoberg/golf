@@ -6,15 +6,20 @@ use self::{
     },
     hole::{create_hole, delete_hole, get_hole, update_hole},
     round::{create_round, delete_round, get_round, get_rounds},
+    user::{get_me, sign_in, sign_up},
 };
 
 pub mod course;
 pub mod hole;
 pub mod round;
+pub mod user;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
+            .service(sign_in)
+            .service(sign_up)
+            .service(get_me)
             .service(get_rounds)
             .service(get_round)
             .service(create_round)

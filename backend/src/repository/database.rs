@@ -1,13 +1,20 @@
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use chrono::{Duration, Utc};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
+use jsonwebtoken::{encode, EncodingKey, Header};
 
 use crate::models::course::{Course, CourseDTO};
 use crate::models::hole::{Hole, HoleDTO};
 use crate::models::round::{Round, RoundDTO};
+use crate::models::user::{AuthResponse, SignInDTO, TokenClaims, User, UserDTO};
 use crate::repository::schema::courses::dsl::*;
 use crate::repository::schema::holes::dsl as holes_dsl;
 use crate::repository::schema::rounds::dsl::*;
+use crate::repository::schema::users::dsl::*;
 
 use std::fmt::Error;
 
@@ -28,6 +35,64 @@ impl Database {
             .build(manager)
             .expect("Failed to create db pool.");
         Database { pool }
+    }
+
+    pub fn register_user(&self, user_dto: UserDTO) -> Result<User, Error> {
+        let salt = SaltString::generate(&mut OsRng);
+        let hashed_password = Argon2::default()
+            .hash_password(user_dto.password.as_bytes(), &salt)
+            .expect("Error while hashing password")
+            .to_string();
+
+        let user_dto = UserDTO {
+            password: hashed_password,
+            ..user_dto
+        };
+
+        let user = diesel::insert_into(users)
+            .values(&user_dto)
+            .get_result::<User>(&mut self.pool.get().unwrap())
+            .expect("Error saving new user");
+        Ok(user)
+    }
+
+    pub fn sign_in(&self, secret: String, sign_in_dto: SignInDTO) -> Result<AuthResponse, Error> {
+        let user = users
+            .filter(email.eq(&sign_in_dto.email))
+            .get_result::<User>(&mut self.pool.get().unwrap())
+            .expect("Error loading user");
+
+        let parsed_hash = PasswordHash::new(&user.password).unwrap();
+
+        Argon2::default()
+            .verify_password(sign_in_dto.password.as_bytes(), &parsed_hash)
+            .expect("Error while verifying password");
+
+        let now = Utc::now();
+        let iat = now.timestamp() as usize;
+        let exp = (now + Duration::minutes(60)).timestamp() as usize;
+        let claims: TokenClaims = TokenClaims {
+            sub: user.id.to_string(),
+            exp,
+            iat,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_ref()),
+        )
+        .unwrap();
+
+        Ok(AuthResponse { token })
+    }
+
+    pub fn get_user(&self, user_id: &Uuid) -> Result<User, Error> {
+        let user = users
+            .find(user_id)
+            .get_result::<User>(&mut self.pool.get().unwrap())
+            .expect("Error loading user");
+        Ok(user)
     }
 
     pub fn create_round(&self, round: RoundDTO) -> Result<Round, Error> {

@@ -4,16 +4,18 @@ use actix_web::{
     HttpResponse,
 };
 
-use crate::{models::round::RoundDTO, repository::database::Database};
+use crate::{models::round::RoundDTO, AppState};
 
 #[get("/rounds")]
-pub async fn get_rounds(db: Data<Database>) -> HttpResponse {
+pub async fn get_rounds(app_state: Data<AppState>) -> HttpResponse {
+    let db = &app_state.db;
     let rounds = db.get_rounds();
     HttpResponse::Ok().json(rounds)
 }
 
 #[get("/round/{id}")]
-pub async fn get_round(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn get_round(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let round = db.get_round(&id);
     match round {
@@ -23,7 +25,8 @@ pub async fn get_round(db: Data<Database>, id: web::Path<String>) -> HttpRespons
 }
 
 #[post("/round")]
-pub async fn create_round(db: Data<Database>, round_dto: Json<RoundDTO>) -> HttpResponse {
+pub async fn create_round(app_state: Data<AppState>, round_dto: Json<RoundDTO>) -> HttpResponse {
+    let db = &app_state.db;
     let round = db.create_round(round_dto.into_inner());
     match round {
         Ok(round) => HttpResponse::Ok().json(round),
@@ -32,7 +35,8 @@ pub async fn create_round(db: Data<Database>, round_dto: Json<RoundDTO>) -> Http
 }
 
 #[delete("/round/{id}")]
-pub async fn delete_round(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn delete_round(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let count = db.delete_round(&id);
     match count {

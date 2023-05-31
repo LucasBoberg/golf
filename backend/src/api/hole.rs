@@ -4,10 +4,11 @@ use actix_web::{
     HttpResponse,
 };
 
-use crate::{models::hole::HoleDTO, repository::database::Database};
+use crate::{models::hole::HoleDTO, AppState};
 
 #[get("/holes/{id}")]
-pub async fn get_hole(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn get_hole(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let hole = db.get_hole(&id);
     match hole {
@@ -17,7 +18,8 @@ pub async fn get_hole(db: Data<Database>, id: web::Path<String>) -> HttpResponse
 }
 
 #[post("/holes")]
-pub async fn create_hole(db: Data<Database>, hole_dto: Json<HoleDTO>) -> HttpResponse {
+pub async fn create_hole(app_state: Data<AppState>, hole_dto: Json<HoleDTO>) -> HttpResponse {
+    let db = &app_state.db;
     let hole = db.create_hole(hole_dto.into_inner());
     match hole {
         Ok(hole) => HttpResponse::Ok().json(hole),
@@ -26,7 +28,8 @@ pub async fn create_hole(db: Data<Database>, hole_dto: Json<HoleDTO>) -> HttpRes
 }
 
 #[delete("/holes/{id}")]
-pub async fn delete_hole(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn delete_hole(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let count = db.delete_hole(&id);
     match count {
@@ -37,10 +40,11 @@ pub async fn delete_hole(db: Data<Database>, id: web::Path<String>) -> HttpRespo
 
 #[put("/holes/{id}")]
 pub async fn update_hole(
-    db: Data<Database>,
+    app_state: Data<AppState>,
     id: web::Path<String>,
     hole_dto: Json<HoleDTO>,
 ) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let hole = db.update_hole(&id, hole_dto.into_inner());
     match hole {

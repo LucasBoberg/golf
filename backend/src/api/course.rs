@@ -4,16 +4,18 @@ use actix_web::{
     HttpResponse,
 };
 
-use crate::{models::course::CourseDTO, repository::database::Database};
+use crate::{models::course::CourseDTO, AppState};
 
 #[get("/courses")]
-pub async fn get_courses(db: Data<Database>) -> HttpResponse {
+pub async fn get_courses(app_state: Data<AppState>) -> HttpResponse {
+    let db = &app_state.db;
     let courses = db.get_courses();
     HttpResponse::Ok().json(courses)
 }
 
 #[get("/courses/{id}")]
-pub async fn get_course(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn get_course(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let course = db.get_course(&id);
     match course {
@@ -23,14 +25,16 @@ pub async fn get_course(db: Data<Database>, id: web::Path<String>) -> HttpRespon
 }
 
 #[get("/courses/{id}/holes")]
-pub async fn get_course_holes(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn get_course_holes(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let holes = db.get_holes_by_course_id(&id);
     HttpResponse::Ok().json(holes)
 }
 
 #[post("/courses")]
-pub async fn create_course(db: Data<Database>, course_dto: Json<CourseDTO>) -> HttpResponse {
+pub async fn create_course(app_state: Data<AppState>, course_dto: Json<CourseDTO>) -> HttpResponse {
+    let db = &app_state.db;
     let course = db.create_course(course_dto.into_inner());
     match course {
         Ok(course) => HttpResponse::Ok().json(course),
@@ -39,7 +43,8 @@ pub async fn create_course(db: Data<Database>, course_dto: Json<CourseDTO>) -> H
 }
 
 #[delete("/courses/{id}")]
-pub async fn delete_course(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+pub async fn delete_course(app_state: Data<AppState>, id: web::Path<String>) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let count = db.delete_course(&id);
     match count {
@@ -50,10 +55,11 @@ pub async fn delete_course(db: Data<Database>, id: web::Path<String>) -> HttpRes
 
 #[put("/courses/{id}")]
 pub async fn update_course(
-    db: Data<Database>,
+    app_state: Data<AppState>,
     id: web::Path<String>,
     course_dto: Json<CourseDTO>,
 ) -> HttpResponse {
+    let db = &app_state.db;
     let id = uuid::Uuid::parse_str(&id).unwrap();
     let course = db.update_course(&id, course_dto.into_inner());
     match course {
