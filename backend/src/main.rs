@@ -32,7 +32,7 @@ async fn main() -> std::io::Result<()> {
     let db = repository::database::Database::new();
     let app_data = web::Data::new(db);
 
-    log::info!("starting HTTP server at http://localhost:8080");
+    log::info!("starting HTTP server at http://127.0.0.1:8080");
 
     HttpServer::new(move || {
         App::new()

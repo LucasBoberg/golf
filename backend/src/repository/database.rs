@@ -52,6 +52,13 @@ impl Database {
         Some(round)
     }
 
+    pub fn delete_round(&self, round_id: &Uuid) -> Result<usize, Error> {
+        let count = diesel::delete(rounds.find(round_id))
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error deleting round");
+        Ok(count)
+    }
+
     pub fn create_course(&self, course: CourseDTO) -> Result<Course, Error> {
         let course = diesel::insert_into(courses)
             .values(&course)
@@ -72,6 +79,21 @@ impl Database {
             .get_result::<Course>(&mut self.pool.get().unwrap())
             .expect("Error loading course");
         Some(course)
+    }
+
+    pub fn delete_course(&self, course: &Uuid) -> Result<usize, Error> {
+        let count = diesel::delete(courses.find(course))
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error deleting course");
+        Ok(count)
+    }
+
+    pub fn update_course(&self, course: &Uuid, course_dto: CourseDTO) -> Result<Course, Error> {
+        let course = diesel::update(courses.find(course))
+            .set(&course_dto)
+            .get_result::<Course>(&mut self.pool.get().unwrap())
+            .expect("Error updating course");
+        Ok(course)
     }
 
     pub fn create_hole(&self, hole: HoleDTO) -> Result<Hole, Error> {
@@ -95,5 +117,20 @@ impl Database {
             .get_result::<Hole>(&mut self.pool.get().unwrap())
             .expect("Error loading hole");
         Some(hole)
+    }
+
+    pub fn delete_hole(&self, hole: &Uuid) -> Result<usize, Error> {
+        let count = diesel::delete(holes_dsl::holes.find(hole))
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error deleting hole");
+        Ok(count)
+    }
+
+    pub fn update_hole(&self, hole: &Uuid, hole_dto: HoleDTO) -> Result<Hole, Error> {
+        let hole = diesel::update(holes_dsl::holes.find(hole))
+            .set(&hole_dto)
+            .get_result::<Hole>(&mut self.pool.get().unwrap())
+            .expect("Error updating hole");
+        Ok(hole)
     }
 }

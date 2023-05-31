@@ -1,5 +1,5 @@
 use actix_web::{
-    get, post,
+    delete, get, post,
     web::{self, Data, Json},
     HttpResponse,
 };
@@ -27,6 +27,16 @@ pub async fn create_round(db: Data<Database>, round_dto: Json<RoundDTO>) -> Http
     let round = db.create_round(round_dto.into_inner());
     match round {
         Ok(round) => HttpResponse::Ok().json(round),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+}
+
+#[delete("/round/{id}")]
+pub async fn delete_round(db: Data<Database>, id: web::Path<String>) -> HttpResponse {
+    let id = uuid::Uuid::parse_str(&id).unwrap();
+    let count = db.delete_round(&id);
+    match count {
+        Ok(count) => HttpResponse::Ok().body(format!("Deleted {} rounds", count)),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
