@@ -9,7 +9,7 @@ use crate::middlewares::auth::generate_token;
 use crate::models::course::{Course, CourseDTO};
 use crate::models::hole::{Hole, HoleDTO};
 use crate::models::round::{Round, RoundDTO};
-use crate::models::user::{AuthResponse, SignInDTO, User, UserDTO};
+use crate::models::user::{AuthResponse, SignInDTO, SignUpDTO, User};
 use crate::repository::schema::courses::dsl::*;
 use crate::repository::schema::holes::dsl as holes_dsl;
 use crate::repository::schema::rounds::dsl::*;
@@ -36,14 +36,14 @@ impl Database {
         Database { pool }
     }
 
-    pub fn register_user(&self, user_dto: UserDTO) -> Result<User, Error> {
+    pub fn register_user(&self, user_dto: SignUpDTO) -> Result<User, Error> {
         let salt = SaltString::generate(&mut OsRng);
         let hashed_password = Argon2::default()
             .hash_password(user_dto.password.as_bytes(), &salt)
             .expect("Error while hashing password")
             .to_string();
 
-        let user_dto = UserDTO {
+        let user_dto = SignUpDTO {
             password: hashed_password,
             ..user_dto
         };

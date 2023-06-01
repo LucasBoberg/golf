@@ -8,7 +8,7 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 use crate::{
     api::ErrorResponse,
     middlewares::auth::{self, generate_token},
-    models::user::{AuthResponse, RefreshDTO, SignInDTO, TokenClaims, UserDTO},
+    models::user::{AuthResponse, RefreshDTO, SignInDTO, SignUpDTO, TokenClaims, UserDTO},
     AppState,
 };
 
@@ -63,11 +63,11 @@ pub async fn refresh(app_state: Data<AppState>, refresh_dto: Json<RefreshDTO>) -
 }
 
 #[post("/auth/sign-up")]
-pub async fn sign_up(app_state: Data<AppState>, user_dto: Json<UserDTO>) -> HttpResponse {
+pub async fn sign_up(app_state: Data<AppState>, sign_up_dto: Json<SignUpDTO>) -> HttpResponse {
     let db = &app_state.db;
-    let user = db.register_user(user_dto.into_inner());
+    let user = db.register_user(sign_up_dto.into_inner());
     match user {
-        Ok(user) => HttpResponse::Ok().json(user),
+        Ok(user) => HttpResponse::Ok().json(UserDTO::from(user)),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
@@ -83,7 +83,7 @@ pub async fn get_me(
     let db = &app_state.db;
     let user = db.get_user(user_id);
     match user {
-        Ok(user) => HttpResponse::Ok().json(user),
+        Ok(user) => HttpResponse::Ok().json(UserDTO::from(user)),
         Err(err) => HttpResponse::InternalServerError().json(err.to_string()),
     }
 }

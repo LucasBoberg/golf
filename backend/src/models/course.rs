@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::repository::schema::courses;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Insertable, AsChangeset)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = courses)]
 pub struct CourseDTO {
     pub name: String,
@@ -18,6 +19,7 @@ pub struct CourseDTO {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = courses)]
 pub struct Course {
     #[serde(default)]

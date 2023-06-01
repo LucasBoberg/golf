@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::repository::schema::holes;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Insertable, AsChangeset)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = holes)]
 pub struct HoleDTO {
     pub course_id: Uuid,
@@ -17,6 +18,7 @@ pub struct HoleDTO {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+#[serde(rename_all = "camelCase")]
 #[diesel(table_name = holes)]
 pub struct Hole {
     #[serde(default)]
