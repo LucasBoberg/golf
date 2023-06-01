@@ -41,7 +41,11 @@ async fn main() -> std::io::Result<()> {
     let config = Config::init();
     let app_data = web::Data::new(AppState { db, env: config });
 
-    log::info!("starting HTTP server at http://127.0.0.1:8080");
+    let addr = std::env::var("ADDRESS").expect("ADDRESS must be set");
+    let port = std::env::var("PORT").expect("PORT must be set");
+    let address = format!("{}:{}", addr, port);
+
+    log::info!("starting HTTP server at http://{}", address);
 
     HttpServer::new(move || {
         App::new()
@@ -51,7 +55,7 @@ async fn main() -> std::io::Result<()> {
             .service(healthcheck)
             .default_service(web::route().to(not_found))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(address)?
     .run()
     .await
 }

@@ -3,7 +3,7 @@
 #
 # Use official rust image to for application build
 # ---------------------------------------------------
-FROM rust:1.66.1 as build
+FROM rust:1.69.0 as build
 
 # Setup working directory
 WORKDIR /usr/src/golf
