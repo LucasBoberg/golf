@@ -5,6 +5,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import se.lucasboberg.golf.android.ui.screens.SignInScreen
+import se.lucasboberg.golf.android.ui.screens.SignUpScreen
 import se.lucasboberg.golf.android.ui.screens.WelcomeScreen
 import se.lucasboberg.golf.utils.Settings
 

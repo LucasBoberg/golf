@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import se.lucasboberg.golf.ApiClient
 import se.lucasboberg.golf.android.utils.NetworkConnectivityObserver
+import se.lucasboberg.golf.data.User
 import se.lucasboberg.golf.utils.Settings
 
 class SignUpViewModel(application: Application) : AndroidViewModel(application) {
@@ -36,27 +37,13 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
         _name.value = "$firstName $lastName"
     }
 
-    fun signUp(email: String, firstName: String, lastName: String) {
+    fun signUp(email: String, password: String, firstName: String, lastName: String, hcp: Float) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _error.value = ""
-                _user.value = apiClient.signUp(email, firstName, lastName)
+                _user.value = apiClient.signUp(email, password, firstName, lastName, hcp)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Something went wrong"
-            }
-        }
-    }
-
-    fun verifyCode(email: String, code: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _error.value = ""
-                val authResponse = apiClient.verifyCode(email, code)
-                settings.set("token", authResponse.token)
-                settings.set("refreshToken", authResponse.refreshToken)
-                _signedIn.value = true
-            } catch (e: Exception) {
-                _error.value = "Invalid code"
             }
         }
     }

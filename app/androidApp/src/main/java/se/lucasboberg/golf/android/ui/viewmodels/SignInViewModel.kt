@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import se.lucasboberg.golf.ApiClient
 import se.lucasboberg.golf.android.utils.NetworkConnectivityObserver
+import se.lucasboberg.golf.data.AuthResponse
 import se.lucasboberg.golf.utils.Settings
 
 class SignInViewModel(application: Application) : AndroidViewModel(application) {
@@ -17,7 +18,7 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
 
     val connectivityObserver = NetworkConnectivityObserver(application.applicationContext)
 
-    private var _user = MutableStateFlow<SignInResponse?>(null)
+    private var _user = MutableStateFlow<AuthResponse?>(null)
     val user = _user.asStateFlow()
 
     private var _signedIn = MutableStateFlow(false)
@@ -26,11 +27,11 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
     private var _error = MutableStateFlow<String>("")
     val error = _error.asStateFlow()
 
-    fun signIn(email: String) {
+    fun signIn(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _error.value = ""
-                _user.value = apiClient.signIn(email)
+                _user.value = apiClient.signIn(email, password)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Something went wrong"
             }

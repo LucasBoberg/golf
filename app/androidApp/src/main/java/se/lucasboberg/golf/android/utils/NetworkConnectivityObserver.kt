@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import se.labbs.app.android.utils.ConnectivityObserver
 
 class NetworkConnectivityObserver(
     context: Context

@@ -16,11 +16,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import se.labbs.app.android.Screen
-import se.labbs.app.android.ui.components.NoInternet
-import se.labbs.app.android.ui.components.OTPField
 import se.lucasboberg.golf.android.ui.viewmodels.SignUpViewModel
-import se.labbs.app.android.utils.ConnectivityObserver
+import se.lucasboberg.golf.android.Screen
+import se.lucasboberg.golf.android.ui.components.NoInternet
+import se.lucasboberg.golf.android.utils.ConnectivityObserver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +42,7 @@ fun SignUpScreen(navController: NavController) {
     LaunchedEffect(signedIn) {
         signedIn.let {
             if (it) {
-                navController.navigate(Screen.EventsScreen.route) {
+                navController.navigate(Screen.RoundsScreen.route) {
                     popUpTo(Screen.SignInScreen.route) { inclusive = true }
                 }
             }
@@ -181,10 +180,6 @@ fun SignUpScreen(navController: NavController) {
                             .padding(horizontal = 32.dp, vertical = 16.dp),
                         fontSize = 32.sp
                     )
-                    OTPField(otpCode, onValueChange = {
-                        otpCode = it
-                        viewModel.clearError()
-                    })
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error,

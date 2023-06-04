@@ -19,6 +19,9 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.MainScope
 import se.lucasboberg.golf.data.AuthResponse
 import se.lucasboberg.golf.data.RefreshInput
+import se.lucasboberg.golf.data.SignInInput
+import se.lucasboberg.golf.data.SignUpInput
+import se.lucasboberg.golf.data.User
 import se.lucasboberg.golf.utils.Settings
 
 class ApiClient(settings: Settings) {
@@ -50,5 +53,35 @@ class ApiClient(settings: Settings) {
                 }
             }
         }.also { Napier.base(DebugAntilog()) }
+    }
+
+    suspend fun signIn(email: String, password: String): Result<AuthResponse> {
+        return try {
+            val response = client.post("${BuildKonfig.BASE_URL}/auth/sign-in") {
+                contentType(ContentType.Application.Json)
+                setBody(SignInInput(email, password))
+            }.body<AuthResponse>()
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signUp(
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String,
+        hcp: Float
+    ): Result<User> {
+        return try {
+            val response = client.post("${BuildKonfig.BASE_URL}/auth/sign-up") {
+                contentType(ContentType.Application.Json)
+                setBody(SignUpInput(email, password, firstName, lastName, hcp))
+            }.body<User>()
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
