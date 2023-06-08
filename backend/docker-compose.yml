@@ -1,4 +1,15 @@
+name: golf
+
 services:
+  app:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
   db:
     image: postgres:14.7-alpine
     restart: always
