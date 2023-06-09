@@ -11,9 +11,6 @@ COPY . .
 
 # Install dependency (Required by diesel)
 RUN apt-get update && apt-get install libpq5 -y
-RUN cargo install diesel_cli --no-default-features --features postgres
-
-RUN command diesel migration run
 
 # Build application
 RUN cargo install --path .
