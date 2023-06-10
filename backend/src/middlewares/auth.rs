@@ -1,4 +1,3 @@
-use core::fmt;
 use std::future::{ready, Ready};
 
 use actix_web::{
@@ -6,22 +5,10 @@ use actix_web::{
     HttpRequest,
 };
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{models::user::TokenClaims, AppState};
+use crate::{api::ErrorResponse, models::user::TokenClaims, AppState};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ErrorResponse {
-    status: String,
-    message: String,
-}
-
-impl fmt::Display for ErrorResponse {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", serde_json::to_string(&self).unwrap())
-    }
-}
 pub struct JwtMiddleware {
     pub user_id: Uuid,
 }
@@ -35,7 +22,12 @@ impl FromRequest for JwtMiddleware {
         let auth_header = req.headers().get("Authorization");
         let token = match auth_header {
             Some(header) => header.to_str().unwrap().split_whitespace().last().unwrap(),
-            None => return ready(Err(ErrorUnauthorized("Missing authorization header"))),
+            None => {
+                return ready(Err(ErrorUnauthorized(ErrorResponse {
+                    status: 401,
+                    message: "Missing authorization header".to_string(),
+                })))
+            }
         };
         let claims = match decode::<TokenClaims>(
             &token,
@@ -45,7 +37,7 @@ impl FromRequest for JwtMiddleware {
             Ok(c) => c.claims,
             Err(_) => {
                 return ready(Err(ErrorUnauthorized(ErrorResponse {
-                    status: "error".to_string(),
+                    status: 401,
                     message: "Invalid token".to_string(),
                 })));
             }

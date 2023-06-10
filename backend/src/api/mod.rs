@@ -1,5 +1,11 @@
-use actix_web::web;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
+use actix_web::{
+    http::{header, StatusCode},
+    web, Error, HttpResponse, ResponseError,
+};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, to_string_pretty};
 
 use self::{
     course::{
@@ -12,8 +18,46 @@ use self::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
-    status: String,
-    message: String,
+    pub message: String,
+    pub status: u16,
+}
+
+impl Display for ErrorResponse {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", to_string_pretty(self).unwrap())
+    }
+}
+
+impl From<Error> for ErrorResponse {
+    fn from(err: Error) -> Self {
+        ErrorResponse {
+            message: err.to_string(),
+            status: 500,
+        }
+    }
+}
+
+impl From<diesel::result::Error> for ErrorResponse {
+    fn from(err: diesel::result::Error) -> ErrorResponse {
+        ErrorResponse {
+            message: err.to_string(),
+            status: 500,
+        }
+    }
+}
+
+impl ResponseError for ErrorResponse {
+    // builds the actual response to send back when an error occurs
+    fn error_response(&self) -> HttpResponse {
+        let err_json = json!({ "error": self.message });
+        HttpResponse::build(StatusCode::from_u16(self.status).unwrap())
+            .append_header(header::ContentType::json())
+            .json(err_json)
+    }
+
+    fn status_code(&self) -> StatusCode {
+        StatusCode::from_u16(self.status).unwrap()
+    }
 }
 
 pub mod course;

@@ -13,7 +13,10 @@ use crate::{
 };
 
 #[post("/auth/sign-in")]
-pub async fn sign_in(app_state: Data<AppState>, sign_in_dto: Json<SignInDTO>) -> HttpResponse {
+pub async fn sign_in(
+    app_state: Data<AppState>,
+    sign_in_dto: Json<SignInDTO>,
+) -> Result<HttpResponse, ErrorResponse> {
     let db = &app_state.db;
     let auth_response = db.sign_in(
         app_state.env.jwt_secret.to_owned(),
@@ -23,8 +26,11 @@ pub async fn sign_in(app_state: Data<AppState>, sign_in_dto: Json<SignInDTO>) ->
         sign_in_dto.into_inner(),
     );
     match auth_response {
-        Ok(auth_response) => HttpResponse::Ok().json(auth_response),
-        Err(err) => HttpResponse::InternalServerError().json(err.to_string()),
+        Ok(auth_response) => Ok(HttpResponse::Ok().json(auth_response)),
+        Err(err) => Err(ErrorResponse {
+            status: 409,
+            message: err.to_string(),
+        }),
     }
 }
 
@@ -38,7 +44,7 @@ pub async fn refresh(app_state: Data<AppState>, refresh_dto: Json<RefreshDTO>) -
         Ok(c) => uuid::Uuid::parse_str(&c.claims.sub).unwrap(),
         Err(_) => {
             return HttpResponse::Unauthorized().json(ErrorResponse {
-                status: "error".to_string(),
+                status: 401,
                 message: "Invalid refresh token".to_string(),
             });
         }

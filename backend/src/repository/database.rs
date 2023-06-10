@@ -1,8 +1,10 @@
+use actix_web::Error;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenv::dotenv;
 
 use crate::middlewares::auth::generate_token;
@@ -15,8 +17,6 @@ use crate::repository::schema::holes::dsl as holes_dsl;
 use crate::repository::schema::rounds::dsl::*;
 use crate::repository::schema::users::dsl::*;
 
-use std::fmt::Error;
-
 pub type DBPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 use uuid::Uuid;
@@ -24,6 +24,8 @@ use uuid::Uuid;
 pub struct Database {
     pub pool: DBPool,
 }
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 impl Database {
     pub fn new() -> Self {
@@ -33,6 +35,10 @@ impl Database {
         let pool: DBPool = r2d2::Pool::builder()
             .build(manager)
             .expect("Failed to create db pool.");
+        pool.get()
+            .unwrap() // here we are getting connection
+            .run_pending_migrations(MIGRATIONS)
+            .expect("Can't run migration");
         Database { pool }
     }
 
